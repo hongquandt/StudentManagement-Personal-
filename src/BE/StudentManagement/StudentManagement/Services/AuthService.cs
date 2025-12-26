@@ -128,6 +128,56 @@ namespace StudentManagement.Services
             }
         }
 
+        public async Task<bool> UpdateAvatarAsync(string username, string avatarUrl)
+        {
+            var user = await _repository.GetUserByUsernameAsync(username);
+            if (user == null) return false;
+
+            user.AvatarUrl = avatarUrl;
+            await _repository.UpdateUserAsync(user);
+            return true;
+        }
+
+        public async Task<User> ExternalLoginAsync(string email, string name, string? avatarUrl)
+        {
+            var user = await _repository.GetUserByEmailAsync(email);
+            if (user != null) return user;
+
+            // Register new user from external provider
+            var randomPassword = Guid.NewGuid().ToString();
+            var hashedPassword = ComputeSha256Hash(randomPassword);
+
+            var newUser = new User
+            {
+                Username = email, // initial attempt
+                PasswordHash = hashedPassword,
+                Email = email,
+                AvatarUrl = avatarUrl,
+                RoleId = 3,
+                IsActive = true,
+                CreatedAt = DateTime.Now
+            };
+
+            if (await _repository.UserExistsAsync(newUser.Username))
+            {
+                newUser.Username = $"{email}_{Guid.NewGuid().ToString().Substring(0, 4)}";
+            }
+
+            var createdUser = await _repository.CreateUserAsync(newUser);
+
+            var newStudent = new Student
+            {
+                UserId = createdUser.UserId,
+                FullName = name,
+                Status = "Active", // "Đang học" or "Active"
+                EnrollmentYear = DateTime.Now.Year
+            };
+
+            await _repository.CreateStudentAsync(newStudent);
+            createdUser.Student = newStudent; // Populate for return
+            return createdUser;
+        }
+
         private static string ComputeHmacSha256(string data, string key)
         {
             using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key)))
