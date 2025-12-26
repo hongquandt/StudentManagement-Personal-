@@ -32,6 +32,11 @@ namespace StudentManagement.Repositories
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
+        public async Task<User?> GetUserByIdAsync(int userId)
+        {
+            return await _context.Users.FindAsync(userId);
+        }
+
         public async Task<bool> UserExistsAsync(string username)
         {
             return await _context.Users.AnyAsync(u => u.Username == username);
