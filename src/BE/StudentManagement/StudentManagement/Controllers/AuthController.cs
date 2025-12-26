@@ -74,6 +74,47 @@ namespace StudentManagement.Controllers
             if (!result) return BadRequest("Invalid or expired token.");
             return Ok("Password reset successfully.");
         }
+        [HttpPost("external-login")]
+        public async Task<IActionResult> ExternalLogin([FromBody] ExternalLoginRequest request)
+        {
+            if (request == null || string.IsNullOrEmpty(request.Email))
+                return BadRequest("Invalid request.");
+
+            var user = await _authService.ExternalLoginAsync(request.Email, request.Name, request.AvatarUrl);
+
+            // Fetch role name if Role object is null (newly created user)
+            string roleName = user.Role?.RoleName;
+            if (string.IsNullOrEmpty(roleName))
+            {
+                // Fallback map based on RoleId
+                roleName = user.RoleId switch
+                {
+                    1 => "Admin",
+                    2 => "Teacher",
+                    3 => "Student",
+                    4 => "parent",
+                    _ => "Student"
+                };
+            }
+
+            return Ok(new
+            {
+                user.UserId,
+                user.Username,
+                user.Email,
+                Role = roleName,
+                FullName = user.Student?.FullName ?? user.Teacher?.FullName ?? user.Parent?.FullName ?? request.Name,
+                user.AvatarUrl
+            });
+        }
+
+        [HttpPost("update-avatar")]
+        public async Task<IActionResult> UpdateAvatar([FromBody] UpdateAvatarRequest request)
+        {
+            var result = await _authService.UpdateAvatarAsync(request.Username, request.AvatarUrl);
+            if (!result) return NotFound("User not found.");
+            return Ok(new { Message = "Avatar updated successfully.", AvatarUrl = request.AvatarUrl });
+        }
     }
 
     public class LoginRequest
@@ -100,5 +141,19 @@ namespace StudentManagement.Controllers
         public string Email { get; set; }
         public string Token { get; set; }
         public string NewPassword { get; set; }
+    }
+
+    public class ExternalLoginRequest
+    {
+        public string Email { get; set; }
+        public string Name { get; set; }
+        public string? AvatarUrl { get; set; }
+        public string Provider { get; set; }
+    }
+
+    public class UpdateAvatarRequest
+    {
+        public string Username { get; set; }
+        public string AvatarUrl { get; set; }
     }
 }
