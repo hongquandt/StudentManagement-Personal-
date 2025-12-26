@@ -24,7 +24,12 @@ namespace StudentManagement.Repositories
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            return await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Student)
+                .Include(u => u.Teacher)
+                .Include(u => u.Parent)
+                .FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<bool> UserExistsAsync(string username)
