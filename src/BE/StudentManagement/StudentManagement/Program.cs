@@ -19,10 +19,12 @@ namespace StudentManagement
 
             // Register Repositories
             builder.Services.AddScoped<StudentManagement.Repositories.IAuthRepository, StudentManagement.Repositories.AuthRepository>();
+            builder.Services.AddScoped<StudentManagement.Repositories.IStudentRepository, StudentManagement.Repositories.StudentRepository>();
 
             // Register Services
             builder.Services.AddScoped<StudentManagement.Services.IAuthService, StudentManagement.Services.AuthService>();
             builder.Services.AddScoped<StudentManagement.Services.IEmailService, StudentManagement.Services.EmailService>();
+            builder.Services.AddScoped<StudentManagement.Services.IStudentService, StudentManagement.Services.StudentService>();
 
             builder.Services.AddCors(options =>
             {

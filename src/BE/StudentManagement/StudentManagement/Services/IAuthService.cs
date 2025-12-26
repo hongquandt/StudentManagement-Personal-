@@ -11,5 +11,6 @@ namespace StudentManagement.Services
         Task<bool> ResetPasswordAsync(string email, string token, string newPassword);
         Task<User> ExternalLoginAsync(string email, string name, string? avatarUrl);
         Task<bool> UpdateAvatarAsync(string username, string avatarUrl);
+        Task<bool> ChangePasswordAsync(int userId, string oldPassword, string newPassword);
     }
 }

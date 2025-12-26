@@ -36,7 +36,8 @@ namespace StudentManagement.Controllers
                 user.Username,
                 user.Email,
                 Role = user.Role.RoleName,
-                FullName = user.Student?.FullName ?? user.Teacher?.FullName ?? user.Parent?.FullName ?? "Admin"
+                FullName = user.Student?.FullName ?? user.Teacher?.FullName ?? user.Parent?.FullName ?? "Admin",
+                StudentId = user.Student?.StudentId
             });
         }
 
@@ -104,8 +105,17 @@ namespace StudentManagement.Controllers
                 user.Email,
                 Role = roleName,
                 FullName = user.Student?.FullName ?? user.Teacher?.FullName ?? user.Parent?.FullName ?? request.Name,
-                user.AvatarUrl
+                user.AvatarUrl,
+                StudentId = user.Student?.StudentId
             });
+        }
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var result = await _authService.ChangePasswordAsync(request.UserId, request.OldPassword, request.NewPassword);
+            if (!result) return BadRequest("Change password failed. Please check your old password.");
+            return Ok("Password changed successfully.");
         }
 
         [HttpPost("update-avatar")]
@@ -155,5 +165,12 @@ namespace StudentManagement.Controllers
     {
         public string Username { get; set; }
         public string AvatarUrl { get; set; }
+    }
+
+    public class ChangePasswordRequest
+    {
+        public int UserId { get; set; }
+        public string OldPassword { get; set; }
+        public string NewPassword { get; set; }
     }
 }
