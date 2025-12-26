@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { User, Mail, Shield, Camera, Edit2, LogOut, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { uploadImage } from '../services/cloudinaryService';
 import './Profile.css';
 
 const Profile = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
+    const fileInputRef = useRef(null);
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -19,6 +22,45 @@ const Profile = () => {
     const handleLogout = () => {
         localStorage.removeItem('user');
         navigate('/login');
+    };
+
+    const handleAvatarClick = () => {
+        fileInputRef.current.click();
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const avatarUrl = await uploadImage(file);
+            
+            const response = await fetch('https://localhost:7115/api/auth/update-avatar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: user.username,
+                    avatarUrl: avatarUrl
+                }),
+            });
+
+            if (response.ok) {
+                const newUser = { ...user, avatarUrl };
+                setUser(newUser);
+                localStorage.setItem('user', JSON.stringify(newUser));
+                alert("Avatar updated successfully!");
+            } else {
+                alert("Failed to update avatar on server.");
+            }
+        } catch (error) {
+            console.error("Upload error:", error);
+            alert("Failed to upload image.");
+        } finally {
+            setUploading(false);
+        }
     };
 
     if (!user) return null;
@@ -43,9 +85,16 @@ const Profile = () => {
                                     {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
                                 </div>
                             )}
-                            <button className="change-avatar-btn">
+                            <button className="change-avatar-btn" onClick={handleAvatarClick} disabled={uploading}>
                                 <Camera size={16} />
                             </button>
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                onChange={handleFileChange} 
+                                style={{ display: 'none' }} 
+                                accept="image/*" 
+                            />
                         </div>
                     </div>
                     <div className="profile-title">
