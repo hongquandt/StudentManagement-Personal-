@@ -16,6 +16,7 @@ namespace StudentManagement
 
             // Register Database Context
             builder.Services.AddDbContext<StudentManagement.Models.StudentManagementContext>();
+            builder.Services.AddMemoryCache();
 
             // Register Repositories
             builder.Services.AddScoped<StudentManagement.Repositories.IAuthRepository, StudentManagement.Repositories.AuthRepository>();
@@ -25,6 +26,7 @@ namespace StudentManagement
             builder.Services.AddScoped<StudentManagement.Services.IAuthService, StudentManagement.Services.AuthService>();
             builder.Services.AddScoped<StudentManagement.Services.IEmailService, StudentManagement.Services.EmailService>();
             builder.Services.AddScoped<StudentManagement.Services.IStudentService, StudentManagement.Services.StudentService>();
+            builder.Services.AddScoped<StudentManagement.Services.IGeminiService, StudentManagement.Services.GeminiService>();
 
             builder.Services.AddCors(options =>
             {
