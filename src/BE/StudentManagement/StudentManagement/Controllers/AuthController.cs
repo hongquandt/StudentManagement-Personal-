@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using StudentManagement.Services;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace StudentManagement.Controllers
 {
@@ -8,10 +9,15 @@ namespace StudentManagement.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IMemoryCache _cache;
 
-        public AuthController(IAuthService authService)
+        private readonly IGeminiService _geminiService;
+
+        public AuthController(IAuthService authService, IMemoryCache cache, IGeminiService geminiService)
         {
             _authService = authService;
+            _cache = cache;
+            _geminiService = geminiService;
         }
 
         [HttpPost("login")]
@@ -21,6 +27,25 @@ namespace StudentManagement.Controllers
             {
                 return BadRequest("Invalid request.");
             }
+
+            // Verify Captcha
+            if (string.IsNullOrEmpty(request.CaptchaKey) || string.IsNullOrEmpty(request.CaptchaCode))
+            {
+                return BadRequest("Mã Captcha là bắt buộc.");
+            }
+
+            if (!_cache.TryGetValue(request.CaptchaKey, out string? storedCode))
+            {
+                return BadRequest("Captcha đã hết hạn hoặc không hợp lệ.");
+            }
+
+            if (!string.Equals(storedCode, request.CaptchaCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest("Mã Captcha không chính xác.");
+            }
+
+            // Remove captcha after use to prevent replay
+            _cache.Remove(request.CaptchaKey);
 
             var user = await _authService.LoginAsync(request.Username, request.Password);
 
@@ -39,6 +64,107 @@ namespace StudentManagement.Controllers
                 FullName = user.Student?.FullName ?? user.Teacher?.FullName ?? user.Parent?.FullName ?? "Admin",
                 StudentId = user.Student?.StudentId
             });
+        }
+
+        [HttpPost("login-with-face")]
+        public async Task<IActionResult> LoginWithFace([FromBody] LoginWithFaceRequest request)
+        {
+            if (request == null || string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password) || string.IsNullOrEmpty(request.FaceImage))
+            {
+                return BadRequest("Invalid request.");
+            }
+
+            // 1. Verify Credentials First
+            var user = await _authService.LoginAsync(request.Username, request.Password);
+            if (user == null)
+            {
+                return Unauthorized("Invalid username or password.");
+            }
+
+            // 2. Check if user has an Avatar (Reference Image)
+            if (string.IsNullOrEmpty(user.AvatarUrl))
+            {
+                 return BadRequest("User does not have a profile picture to verify against. Please update your profile with a clear face photo first.");
+            }
+
+            // 3. Verify Face with AI
+            bool isFaceValid = await _geminiService.VerifyFaceAsync(user.AvatarUrl, request.FaceImage);
+            
+            if (!isFaceValid)
+            {
+                return Unauthorized("Face verification failed. Please try again or use standard login.");
+            }
+
+            // 4. Return Token/User Info
+            return Ok(new
+            {
+                user.UserId,
+                user.Username,
+                user.Email,
+                Role = user.Role.RoleName,
+                FullName = user.Student?.FullName ?? user.Teacher?.FullName ?? user.Parent?.FullName ?? "Admin",
+                StudentId = user.Student?.StudentId
+            });
+        }
+
+        [HttpGet("captcha")]
+        public IActionResult GetCaptcha()
+        {
+            string code = GenerateRandomCode(5);
+            string key = Guid.NewGuid().ToString();
+
+            // Store in cache for 5 minutes
+            _cache.Set(key, code, TimeSpan.FromMinutes(5));
+
+            string svg = GenerateSvg(code);
+
+            return Ok(new { Key = key, Svg = svg });
+        }
+
+        private string GenerateRandomCode(int length)
+        {
+            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Removed confusing chars like I, 1, O, 0
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        private string GenerateSvg(string captchaCode)
+        {
+            var random = new Random();
+            string width = "120";
+            string height = "40";
+
+            // Svg Builder
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"<svg width='{width}' height='{height}' xmlns='http://www.w3.org/2000/svg' style='background-color:#f0f0f0; border-radius:4px; user-select:none;'>");
+
+            // Random lines
+            for (int i = 0; i < 7; i++)
+            {
+                 string color = String.Format("#{0:X6}", random.Next(0x1000000));
+                 sb.Append($"<line x1='{random.Next(0, 120)}' y1='{random.Next(0, 40)}' x2='{random.Next(0, 120)}' y2='{random.Next(0, 40)}' stroke='{color}' stroke-width='1' opacity='0.5' />");
+            }
+            
+            // Random dots
+            for(int i=0; i < 30; i++) {
+                 string color = String.Format("#{0:X6}", random.Next(0x1000000));
+                 sb.Append($"<circle cx='{random.Next(0, 120)}' cy='{random.Next(0, 40)}' r='1' fill='{color}' opacity='0.5' />");
+            }
+
+            // Text with slight randomization in position/rotation is hard in pure SVG without JS, but we can do basic positioning
+            // To keep it simple, just centered text for now, maybe split characters to jitter them
+             int x = 10;
+             foreach(char c in captchaCode) 
+             {
+                int y = 25 + random.Next(-5, 5);
+                string color = "#000"; // Dark color for text
+                sb.Append($"<text x='{x}' y='{y}' font-family='Arial' font-size='22' font-weight='bold' fill='{color}'>{c}</text>");
+                x += 20;
+             }
+
+            sb.Append("</svg>");
+            return sb.ToString();
         }
 
         [HttpPost("register")]
@@ -131,6 +257,15 @@ namespace StudentManagement.Controllers
     {
         public string Username { get; set; }
         public string Password { get; set; }
+        public string CaptchaKey { get; set; }
+        public string CaptchaCode { get; set; }
+    }
+
+    public class LoginWithFaceRequest
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public string FaceImage { get; set; }
     }
 
     public class RegisterRequest
