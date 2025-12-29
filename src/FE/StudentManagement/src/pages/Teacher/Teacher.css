@@ -239,6 +239,18 @@
   cursor: pointer;
 }
 
+/* Explicit text color for inner elements to avoid ghosting */
+.dashboard-card table th,
+.dashboard-card table td {
+  color: var(--text-primary);
+}
+
+.dashboard-card input, 
+.dashboard-card select {
+  color: var(--text-primary);
+  background-color: white;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .sidebar {

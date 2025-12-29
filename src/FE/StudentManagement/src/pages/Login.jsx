@@ -151,7 +151,8 @@ const Login = () => {
         success('Login successful! Welcome back.');
         // Navigate and then reload or just navigate if state is managed globally
         // For simple implementations, just navigating to home is enough if Home checks localStorage on mount
-        if (data.role === 'Teacher') {
+        const role = data.role ? data.role.toLowerCase() : '';
+        if (role === 'teacher') {
           navigate('/teacher/dashboard');
         } else {
           navigate('/');

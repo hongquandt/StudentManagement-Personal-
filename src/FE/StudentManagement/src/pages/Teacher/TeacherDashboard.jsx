@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { 
   Users, 
   Calendar, 
@@ -8,23 +9,74 @@ import {
 import './Teacher.css';
 
 const TeacherDashboard = () => {
-  const stats = [
-    { title: 'Total Students', value: '45', icon: Users, color: '#4f46e5', bg: '#eef2ff' },
-    { title: 'Classes Today', value: '4', icon: Calendar, color: '#0ea5e9', bg: '#e0f2fe' },
-    { title: 'Hours Taught', value: '128', icon: Clock, color: '#f59e0b', bg: '#fef3c7' },
-    { title: 'Avg Attendance', value: '96%', icon: TrendingUp, color: '#10b981', bg: '#d1fae5' },
-  ];
+  const { teacherId } = useOutletContext();
+  const [upcomingClasses, setUpcomingClasses] = useState([]);
+  const [stats, setStats] = useState({
+     totalStudents: 0,
+     hoursTaught: 0,
+     avgAttendance: 0
+  });
+  const [loading, setLoading] = useState(true);
 
-  const upcomingClasses = [
-    { id: 1, subject: 'Mathematics 10A', time: '08:00 - 09:30', room: 'Room 301', status: 'In Progress' },
-    { id: 2, subject: 'Mathematics 10B', time: '09:45 - 11:15', room: 'Room 302', status: 'Upcoming' },
-    { id: 3, subject: 'Geometry 11A', time: '13:00 - 14:30', room: 'Room 405', status: 'Upcoming' },
+  useEffect(() => {
+    if (teacherId) {
+       // 1. Fetch Timetable for today
+      fetch(`https://localhost:7115/api/Teacher/timetable/${teacherId}`)
+        .then(res => res.json())
+        .then(data => {
+          // Filter for today
+          const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const today = days[new Date().getDay()];
+          
+          const dayMapping = {
+            'Monday': 'Thứ 2',
+            'Tuesday': 'Thứ 3',
+            'Wednesday': 'Thứ 4',
+            'Thursday': 'Thứ 5',
+            'Friday': 'Thứ 6',
+            'Saturday': 'Thứ 7',
+            'Sunday': 'Chủ Nhật'
+          };
+          
+          const todayStr = dayMapping[today];
+          const todaysClasses = data.filter(c => c.dayOfWeek === todayStr);
+          
+          const formatted = todaysClasses.map((c, i) => ({
+             id: i,
+             subject: c.subjectName,
+             time: `Period ${c.period}`,
+             room: `Room ${c.roomNumber}`,
+             status: 'Upcoming'
+          }));
+          setUpcomingClasses(formatted);
+        })
+        .catch(err => console.error(err));
+        
+      // 2. Fetch Stats
+      fetch(`https://localhost:7115/api/Teacher/stats/${teacherId}`)
+          .then(res => res.json())
+          .then(data => {
+              setStats(data);
+              setLoading(false);
+          })
+          .catch(err => {
+              console.error(err);
+              setLoading(false);
+          });
+    }
+  }, [teacherId]);
+
+  const dashboardStats = [
+    { title: 'Total Students', value: stats.totalStudents.toString(), icon: Users, color: '#4f46e5', bg: '#eef2ff' },
+    { title: 'Classes Today', value: upcomingClasses.length.toString(), icon: Calendar, color: '#0ea5e9', bg: '#e0f2fe' },
+    { title: 'Hours Taught', value: stats.hoursTaught.toString(), icon: Clock, color: '#f59e0b', bg: '#fef3c7' },
+    { title: 'Avg Attendance', value: `${stats.avgAttendance}%`, icon: TrendingUp, color: '#10b981', bg: '#d1fae5' },
   ];
 
   return (
     <div className="dashboard-home">
       <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '30px' }}>
-        {stats.map((stat, index) => {
+        {dashboardStats.map((stat, index) => {
            const Icon = stat.icon;
            return (
              <div key={index} className="dashboard-card" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '0' }}>
@@ -48,7 +100,8 @@ const TeacherDashboard = () => {
                 <span className="card-action">View Full Timetable</span>
               </div>
               <div className="schedule-list">
-                 {upcomingClasses.map((cls) => (
+                 {loading ? <p>Loading schedule...</p> : (
+                    upcomingClasses.length > 0 ? upcomingClasses.map((cls) => (
                    <div key={cls.id} style={{ 
                       display: 'flex', 
                       alignItems: 'center', 
@@ -59,8 +112,8 @@ const TeacherDashboard = () => {
                    }}>
                      <div style={{ display: 'flex', gap: '15px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10px', background: '#f8fafc', borderRadius: '8px', minWidth: '80px' }}>
-                           <span style={{ fontWeight: 'bold', color: '#111827' }}>{cls.time.split('-')[0]}</span>
-                           <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>Start</span>
+                           <span style={{ fontWeight: 'bold', color: '#111827' }}>{cls.time}</span>
+                           <span style={{ fontSize: '0.8rem', color: '#6b7280' }}></span>
                         </div>
                         <div>
                            <h4 style={{ margin: '0 0 5px 0', fontSize: '1.1rem' }}>{cls.subject}</h4>
@@ -78,7 +131,7 @@ const TeacherDashboard = () => {
                        {cls.status}
                      </span>
                    </div>
-                 ))}
+                 )) : <p>No classes scheduled for today.</p>)}
               </div>
            </div>
 

@@ -34,6 +34,20 @@ const TeacherLayout = () => {
     { path: '/teacher/certificates', icon: Award, label: 'Certificates' },
   ];
 
+  const [teacherId, setTeacherId] = useState(null);
+
+  React.useEffect(() => {
+    if (user?.userId) {
+       fetch(`https://localhost:7115/api/Teacher/get-teacher-id/${user.userId}`)
+         .then(res => {
+            if(res.ok) return res.json();
+            throw new Error('Not found');
+         })
+         .then(id => setTeacherId(id))
+         .catch(err => console.error("Could not fetch teacher ID", err));
+    }
+  }, [user?.userId]);
+
   const handleLogout = () => {
     localStorage.removeItem('user');
     window.dispatchEvent(new Event("storage"));
@@ -107,7 +121,7 @@ const TeacherLayout = () => {
         </header>
 
         <div className="content-area">
-          <Outlet />
+          <Outlet context={{ teacherId, user }} />
         </div>
       </main>
     </div>
