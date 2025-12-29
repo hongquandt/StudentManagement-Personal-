@@ -1,17 +1,15 @@
-
 import React from 'react';
 import './Home.css';
 import { 
-  CheckCircle, 
+  GraduationCap, 
   Users, 
-  BarChart, 
-  Shield, 
+  BookOpen, 
+  Calendar, 
   ArrowRight,
-  Menu,
-  X,
-  Play
+  Shield,
+  Clock,
+  Award
 } from 'lucide-react';
-
 import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
@@ -26,10 +24,7 @@ const Home = () => {
         setUser(JSON.parse(storedUser));
       }
     };
-    
     checkUser();
-    
-    // Listen for storage events (e.g. login/logout in other tabs)
     window.addEventListener('storage', checkUser);
     return () => window.removeEventListener('storage', checkUser);
   }, []);
@@ -40,25 +35,21 @@ const Home = () => {
       <nav className="container navbar">
         <div className="nav-brand">
           <div className="logo-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#4f46e5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 17L12 22L22 17" stroke="#4f46e5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 12L12 17L22 12" stroke="#4f46e5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <GraduationCap size={32} color="#4f46e5" />
           </div>
-          School<span>Manager</span>
+          Edu<span>Smart</span>
         </div>
 
         <div className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
           <a href="#" className="nav-link">Home</a>
-          <a href="#" className="nav-link">Features</a>
-          <a href="#" className="nav-link">Pricing</a>
-          <a href="#" className="nav-link">About</a>
+          <a href="#about" className="nav-link">About</a>
+          <a href="#academics" className="nav-link">Academics</a>
+          <a href="#contact" className="nav-link">Contact</a>
         </div>
 
         <div className="nav-actions">
           {user ? (
-            <div className="user-menu" onClick={() => navigate('/profile')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="user-menu" onClick={() => navigate(user.roleId === 2 ? '/teacher/dashboard' : '/profile')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span className="user-name" style={{ fontWeight: '500' }}>{user.fullName || user.username}</span>
               <div style={{ 
                 width: '40px', 
@@ -78,7 +69,6 @@ const Home = () => {
           ) : (
             <>
               <button className="btn btn-secondary" style={{ marginRight: '1rem' }} onClick={() => navigate('/login')}>Login</button>
-              <button className="btn btn-primary" onClick={() => navigate('/register')}>Get Started</button>
             </>
           )}
         </div>
@@ -87,239 +77,154 @@ const Home = () => {
       {/* Hero Section */}
       <header className="container hero">
         <div className="hero-content">
-          <span className="hero-tag">New V2.0 Released</span>
+          <span className="hero-tag">Academic Year 2025-2026</span>
           <h1 className="hero-title">
-            Manage your school <br />
-            easily with Task Man
+            Empowering the <br />
+            Future of Education
           </h1>
           <p className="hero-subtitle">
-            School Manager is a complete solution for managing your school. 
-            Track students, attendance, grades, and more in one place.
+            Welcome to EduSmart High School. A comprehensive platform connecting students, teachers, and parents for a seamless learning experience.
           </p>
           <div className="hero-buttons">
-            <button className="btn btn-primary" onClick={() => navigate('/register')}>Get Started</button>
-            <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Play size={16} fill="white" /> Watch Video
-            </button>
+            <button className="btn btn-primary" onClick={() => navigate('/login')}>Access Portal</button>
+            <button className="btn btn-secondary">Learn More</button>
           </div>
         </div>
         
         <div className="hero-image">
-          {/* Conceptual Dashboard Image */}
-          <div style={{
-            background: '#1e293b',
-            borderRadius: '20px',
-            border: '1px solid rgba(255,255,255,0.1)',
-            padding: '20px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-          }}>
-            {/* Mock UI header */}
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444' }}></div>
-              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#eab308' }}></div>
-              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#22c55e' }}></div>
-            </div>
-            {/* Mock UI Body */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '20px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div style={{ height: '30px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', width: '80%' }}></div>
-                <div style={{ height: '30px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', width: '100%' }}></div>
-                <div style={{ height: '30px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', width: '90%' }}></div>
-              </div>
-              <div style={{ background: '#0f172a', borderRadius: '12px', height: '200px', padding: '20px' }}>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                    <div style={{ height: '20px', width: '100px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}></div>
-                    <div style={{ height: '20px', width: '30px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}></div>
-                 </div>
-                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', height: '120px' }}>
-                    <div style={{ flex: 1, background: '#4f46e5', height: '60%', borderRadius: '4px' }}></div>
-                    <div style={{ flex: 1, background: '#ec4899', height: '80%', borderRadius: '4px' }}></div>
-                    <div style={{ flex: 1, background: '#8b5cf6', height: '40%', borderRadius: '4px' }}></div>
-                    <div style={{ flex: 1, background: '#06b6d4', height: '90%', borderRadius: '4px' }}></div>
-                 </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="floating-card card-1">
-            <div style={{ background: '#22c55e', padding: '8px', borderRadius: '8px' }}>
-              <CheckCircle color="white" size={20} />
-            </div>
-            <div>
-              <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Task Completed</p>
-              <p style={{ fontWeight: 'bold' }}>100%</p>
-            </div>
-          </div>
+           <img src="/school_landing.png" alt="School Building" style={{ borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)' }} />
         </div>
       </header>
 
-      {/* Trusted By */}
-      <section className="container companies">
-        <p>Trusted by company like</p>
-        <div className="logo-row">
-            {/* SVG Placeholders for logos */}
-            <svg viewBox="0 0 100 30" fill="currentColor"><path d="M10,15 L20,5 L30,15 L20,25 Z M40,10 H90 V20 H40 Z" /></svg>
-            <svg viewBox="0 0 100 30" fill="currentColor"><circle cx="20" cy="15" r="10" /><rect x="40" y="10" width="50" height="10" /></svg>
-            <svg viewBox="0 0 100 30" fill="currentColor"><rect x="10" y="5" width="20" height="20" /><rect x="40" y="10" width="50" height="10" /></svg>
-            <svg viewBox="0 0 100 30" fill="currentColor"><path d="M10,25 L20,5 L30,25 Z" /><rect x="40" y="10" width="50" height="10" /></svg>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="container features">
+      {/* Role-Based Features */}
+      <section className="container features" id="academics">
         <div className="section-header">
-          <h2 className="section-title">Create your task</h2>
-          <p className="section-desc">
-            Organize your school's workflow with our intuitive tools.
-            Manage students, teachers, and staff seamlessly.
-          </p>
+           <h2 className="section-title">One Platform, Endless Possibilities</h2>
+           <p className="section-desc">Tools tailored for every role in our educational ecosystem.</p>
         </div>
 
         <div className="features-grid">
             <div className="feature-card">
               <div className="icon-box">
-                <Users size={32} />
+                <BookOpen size={32} />
               </div>
-              <h3 className="feature-title">Student Tracking</h3>
-              <p className="feature-desc">Keep detailed records of all student activities, grades, and attendance in one secure place.</p>
+              <h3 className="feature-title">For Students</h3>
+              <p className="feature-desc">Access your personalized schedule, track your grades in real-time, and view attendance records anytime, anywhere.</p>
+              <div style={{ marginTop: '1rem', color: '#818cf8', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9rem' }}>
+                 Student Portal <ArrowRight size={16}/>
+              </div>
             </div>
+
             <div className="feature-card">
               <div className="icon-box">
-                <BarChart size={32} />
+                <Users size={32} />
               </div>
-              <h3 className="feature-title">Analytics</h3>
-              <p className="feature-desc">Visualize school performance with advanced analytics and generate comprehensive reports.</p>
+              <h3 className="feature-title">For Teachers</h3>
+              <p className="feature-desc">Efficiently manage classes, input grades, take attendance, and monitor student progress with intuitive tools.</p>
+              <div style={{ marginTop: '1rem', color: '#818cf8', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9rem' }}>
+                 Teacher Portal <ArrowRight size={16}/>
+              </div>
             </div>
+
             <div className="feature-card">
               <div className="icon-box">
                 <Shield size={32} />
               </div>
-              <h3 className="feature-title">Secure Data</h3>
-              <p className="feature-desc">Your data is encrypted and secure. We prioritize privacy and compliance with regulations.</p>
+              <h3 className="feature-title">Secure & Private</h3>
+              <p className="feature-desc">Your data security is our top priority. We ensure confidential academic records and personal information are protected.</p>
             </div>
         </div>
       </section>
 
-      {/* Interactive Feature Section (Mockup) */}
-      <section className="container app-preview">
-        <div className="preview-nav">
-           <div className="nav-item active">
-             <h3>Create your text</h3>
-             <p>Easily create and manage content.</p>
-           </div>
-           <div className="nav-item">
-             <h3>Choose your style</h3>
-             <p>Customize the look and feel.</p>
-           </div>
-           <div className="nav-item">
-             <h3>Manage the team</h3>
-             <p>Assign tasks and track progress.</p>
-           </div>
-        </div>
-        <div className="hero-image">
-           <div style={{
-             background: 'linear-gradient(135deg, #1e293b, #0f172a)',
-             borderRadius: '30px',
-             padding: '20px',
-             border: '4px solid #334155',
-             maxWidth: '300px',
-             margin: '0 auto',
-             boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
-           }}>
-             <div style={{ textAlign: 'center', padding: '20px 0' }}>
-               <div style={{ width: '60px', height: '60px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%', margin: '0 auto 20px' }}></div>
-               <h4 style={{ marginBottom: '10px' }}>Create your task</h4>
-               <button className="btn btn-primary" style={{ width: '100%', borderRadius: '12px' }}>Get Started</button>
-             </div>
-           </div>
-        </div>
+      {/* Stats / Achievements */}
+      <section className="container" style={{ padding: '4rem 0' }}>
+         <div style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', borderRadius: '20px', padding: '3rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', textAlign: 'center' }}>
+                <div>
+                   <h2 style={{ fontSize: '3rem', fontWeight: 'bold', color: '#818cf8', marginBottom: '0.5rem' }}>1,500+</h2>
+                   <p style={{ color: '#94a3b8' }}>Students Enrolled</p>
+                </div>
+                <div>
+                   <h2 style={{ fontSize: '3rem', fontWeight: 'bold', color: '#34d399', marginBottom: '0.5rem' }}>100+</h2>
+                   <p style={{ color: '#94a3b8' }}>Certified Teachers</p>
+                </div>
+                <div>
+                   <h2 style={{ fontSize: '3rem', fontWeight: 'bold', color: '#f472b6', marginBottom: '0.5rem' }}>100%</h2>
+                   <p style={{ color: '#94a3b8' }}>Pass Rate</p>
+                </div>
+                <div>
+                   <h2 style={{ fontSize: '3rem', fontWeight: 'bold', color: '#fbbf24', marginBottom: '0.5rem' }}>50+</h2>
+                   <p style={{ color: '#94a3b8' }}>Years of Excellence</p>
+                </div>
+            </div>
+         </div>
       </section>
 
-      {/* Pricing */}
-      <section className="container features" style={{ paddingTop: '0' }}>
-          <div className="section-header">
-            <h2 className="section-title">Pick up the best plan</h2>
-            <p className="section-desc">Choose a plan that fits your school's needs.</p>
-          </div>
-          
-          <div className="features-grid">
-             <div className="feature-card" style={{ borderTop: '4px solid #4f46e5' }}>
-               <h3 className="feature-title">Standard</h3>
-               <h2 style={{ fontSize: '3rem', marginBottom: '1rem' }}>$15<span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/mo</span></h2>
-               <ul style={{ marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><CheckCircle size={16} color="#4f46e5"/> 10 Users</li>
-                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><CheckCircle size={16} color="#4f46e5"/> Basic Support</li>
-               </ul>
-               <button className="btn btn-secondary" style={{ width: '100%', borderColor: '#4f46e5', color: '#4f46e5' }}>Choose</button>
-             </div>
-             <div className="feature-card" style={{ background: '#312e81', borderTop: '4px solid #ec4899', transform: 'scale(1.05)' }}>
-               <h3 className="feature-title">Premium</h3>
-               <h2 style={{ fontSize: '3rem', marginBottom: '1rem' }}>$35<span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/mo</span></h2>
-               <ul style={{ marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><CheckCircle size={16} color="#ec4899"/> Unlimited Users</li>
-                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><CheckCircle size={16} color="#ec4899"/> Priority Support</li>
-                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><CheckCircle size={16} color="#ec4899"/> Advanced Analytics</li>
-               </ul>
-               <button className="btn btn-primary" style={{ width: '100%' }}>Choose</button>
-             </div>
-             <div className="feature-card" style={{ borderTop: '4px solid #4f46e5' }}>
-               <h3 className="feature-title">Enterprise</h3>
-               <h2 style={{ fontSize: '3rem', marginBottom: '1rem' }}>$99<span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/mo</span></h2>
-               <ul style={{ marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><CheckCircle size={16} color="#4f46e5"/> Custom Solutions</li>
-                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><CheckCircle size={16} color="#4f46e5"/> 24/7 Support</li>
-               </ul>
-               <button className="btn btn-secondary" style={{ width: '100%', borderColor: '#4f46e5', color: '#4f46e5' }}>Choose</button>
-             </div>
-          </div>
+      {/* News / Announcements */}
+      <section className="container features" style={{ padding: '4rem 0' }}>
+         <div className="section-header" style={{ marginBottom: '2rem', textAlign: 'left' }}>
+            <h2 className="section-title">Latest & Announcements</h2>
+         </div>
+         
+         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+             {[1, 2, 3].map(i => (
+                 <div key={i} className="feature-card" style={{ padding: '0', overflow: 'hidden' }}>
+                     <div style={{ height: '150px', background: `linear-gradient(45deg, #3730a3, #4f46e5)`, opacity: 0.8 }}></div>
+                     <div style={{ padding: '1.5rem' }}>
+                         <span style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '0.5rem' }}>
+                            <Calendar size={14}/> Dec {24 + i}, 2025
+                         </span>
+                         <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '1rem', color: 'white' }}>Final Semester Exams Schedule Released</h3>
+                         <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                             The schedule for the upcoming final exams has been published. Please check your student portal.
+                         </p>
+                         <a href="#" style={{ color: '#818cf8', fontSize: '0.9rem', fontWeight: '500' }}>Read more</a>
+                     </div>
+                 </div>
+             ))}
+         </div>
       </section>
-
-      {/* Subscribe/Newsletter */}
-      <div className="container subscribe">
-        <div className="subscribe-content">
-          <h2>Interesting option from customer</h2>
-          <p>Join our newsletter to get the latest updates and offers.</p>
-          <div className="input-group">
-            <input type="email" placeholder="Enter your email address" />
-            <button className="btn btn-primary">Subscribe</button>
-          </div>
-        </div>
-      </div>
 
       {/* Footer */}
-      <footer className="container footer">
+      <footer className="container footer" id="contact">
         <div className="footer-content">
           <div className="footer-brand">
-            <h3>SchoolManager</h3>
-            <p>Making school management efficient and easy.</p>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <GraduationCap size={24}/> EduSmart
+            </h3>
+            <p>Developing leaders for tomorrow.</p>
+            <div style={{ marginTop: '1.5rem', color: '#94a3b8' }}>
+                <p style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}><Users size={16}/> 123 Education Lane, Hanoi</p>
+                <p style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}><Clock size={16}/> Mon - Fri: 7:00 AM - 5:00 PM</p>
+                <p style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Shield size={16}/> +84 123 456 789</p>
+            </div>
           </div>
           <div className="footer-links">
-            <h4>Product</h4>
+            <h4>Quick Links</h4>
             <ul>
-              <li>Features</li>
-              <li>Pricing</li>
-              <li>Case Studies</li>
+              <li>Admissions</li>
+              <li>Academic Calendar</li>
+              <li>Student Life</li>
+              <li>Contact Us</li>
             </ul>
           </div>
           <div className="footer-links">
-            <h4>Company</h4>
+            <h4>Resources</h4>
             <ul>
-              <li>About</li>
-              <li>Careers</li>
-              <li>Contact</li>
+              <li>Library</li>
+              <li>Transport</li>
+              <li>Cafeteria</li>
+              <li>Sports</li>
             </ul>
           </div>
-          <div className="footer-links">
-            <h4>Support</h4>
-            <ul>
-              <li>Help Center</li>
-              <li>Terms of Service</li>
-              <li>Privacy Policy</li>
-            </ul>
+          <div className="footer-links" style={{ background: '#1e293b', padding: '1.5rem', borderRadius: '12px' }}>
+            <h4 style={{ marginBottom: '0.5rem' }}>Portal Login</h4>
+            <p style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#94a3b8' }}>Quick access for staff and students.</p>
+            <button className="btn btn-primary" style={{ width: '100%', borderRadius: '8px' }} onClick={() => navigate('/login')}>Login Now</button>
           </div>
         </div>
         <div className="copyright">
-          © 2024 SchoolManager. All rights reserved.
+          © 2025 EduSmart High School. All rights reserved.
         </div>
       </footer>
     </div>

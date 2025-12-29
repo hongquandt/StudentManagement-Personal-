@@ -27,6 +27,7 @@ namespace StudentManagement
             builder.Services.AddScoped<StudentManagement.Services.IEmailService, StudentManagement.Services.EmailService>();
             builder.Services.AddScoped<StudentManagement.Services.IStudentService, StudentManagement.Services.StudentService>();
             builder.Services.AddScoped<StudentManagement.Services.IGeminiService, StudentManagement.Services.GeminiService>();
+            builder.Services.AddScoped<StudentManagement.Services.ITeacherService, StudentManagement.Services.TeacherService>();
 
             builder.Services.AddCors(options =>
             {
