@@ -49,6 +49,8 @@ public partial class StudentManagementContext : DbContext
 
     public virtual DbSet<Timetable> Timetables { get; set; }
 
+    public virtual DbSet<TeacherRequest> TeacherRequests { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -505,6 +507,32 @@ public partial class StudentManagementContext : DbContext
                 .HasForeignKey(d => d.TeacherId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_tt_teacher");
+        });
+
+        modelBuilder.Entity<TeacherRequest>(entity =>
+        {
+            entity.HasKey(e => e.RequestId).HasName("PK__teacher___E3C5DE31D1234567");
+
+            entity.ToTable("teacher_requests");
+
+            entity.Property(e => e.RequestId).HasColumnName("request_id");
+            entity.Property(e => e.Content).HasColumnName("content");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.RequestType)
+                .HasMaxLength(50)
+                .HasColumnName("request_type");
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .HasDefaultValue("Pending")
+                .HasColumnName("status");
+            entity.Property(e => e.TeacherId).HasColumnName("teacher_id");
+
+            entity.HasOne(d => d.Teacher).WithMany(p => p.TeacherRequests)
+                .HasForeignKey(d => d.TeacherId)
+                .HasConstraintName("fk_request_teacher");
         });
 
         modelBuilder.Entity<User>(entity =>
