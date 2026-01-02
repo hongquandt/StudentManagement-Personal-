@@ -178,6 +178,25 @@ namespace StudentManagement.Services
             return createdUser;
         }
 
+        public async Task<bool> ChangePasswordAsync(int userId, string oldPassword, string newPassword)
+        {
+            var user = await _repository.GetUserByIdAsync(userId);
+            if (user == null) return false;
+
+            // Verify old password
+            // If user has no password (external login only), they might not have a password set.
+            // But usually they should set one if they want to use this feature, or we allow setting it if null?
+            // Assuming standard flow:
+            if (user.PasswordHash != ComputeSha256Hash(oldPassword))
+            {
+                return false;
+            }
+
+            user.PasswordHash = ComputeSha256Hash(newPassword);
+            await _repository.UpdateUserAsync(user);
+            return true;
+        }
+
         private static string ComputeHmacSha256(string data, string key)
         {
             using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key)))

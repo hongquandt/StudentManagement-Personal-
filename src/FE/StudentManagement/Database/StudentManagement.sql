@@ -308,3 +308,200 @@ INSERT INTO timetables (class_id, subject_id, teacher_id, semester_id, day_of_we
 INSERT INTO scores (student_id, subject_id, semester_id, oral_score, quiz_score, midterm_score, final_score) 
 VALUES (1, 1, 1, 8, 9, 8, 9); 
 -- Kết quả Average sẽ tự động là ~8.71 (theo công thức mẫu)
+-- =========================
+-- INSERT NEW TEACHER
+-- =========================
+INSERT INTO users (username, password_hash, email, role_id, citizen_id_image, ethnicity) 
+VALUES ('teacher1', '123', 'teacher1@school.edu', (SELECT role_id FROM roles WHERE role_name = 'teacher'), NULL, N'Kinh');
+
+DECLARE @TeacherUserId INT = (SELECT user_id FROM users WHERE username = 'teacher1');
+
+INSERT INTO teachers (user_id, full_name, specialization, phone) 
+VALUES (@TeacherUserId, N'Nguyễn Văn A', N'Vật Lý', '0909090909');
+
+
+-- Add Subject Physics
+INSERT INTO subjects (subject_name) VALUES (N'Vật Lý');
+DECLARE @SubjectPhysicsId INT = (SELECT subject_id FROM subjects WHERE subject_name = N'Vật Lý');
+
+-- Add Class 11A1 with teacher1 as homeroom
+-- Assuming we just inserted teacher1, we get their teacher_id
+DECLARE @NewTeacherId INT = (SELECT teacher_id FROM teachers WHERE user_id = (SELECT user_id FROM users WHERE username = 'teacher1'));
+
+INSERT INTO classes (class_name, grade, homeroom_teacher_id, academic_year_id) 
+VALUES ('11A1', 11, @NewTeacherId, 1);
+DECLARE @Class11A1Id INT = (SELECT class_id FROM classes WHERE class_name = '11A1');
+
+-- Assign teacher1 to teach Physics to 11A1
+INSERT INTO teaching_assignments (teacher_id, class_id, subject_id, semester_id) 
+VALUES (@NewTeacherId, @Class11A1Id, @SubjectPhysicsId, 1);
+
+
+-- =========================
+-- CHANGE ROLE FROM STUDENT TO TEACHER
+-- User: luong1
+-- =========================
+BEGIN TRANSACTION;
+
+BEGIN TRY
+    -- 1. Get User ID
+    DECLARE @TargetUserId INT = (SELECT user_id FROM users WHERE username = 'luong1');
+
+    IF @TargetUserId IS NULL
+    BEGIN
+        PRINT 'User not found';
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+
+    -- 2. Update Role in Users table
+    UPDATE users 
+    SET role_id = 2 -- Teacher
+    WHERE user_id = @TargetUserId;
+
+    -- 3. Remove from Students table if exists
+    -- We need to save student info to migrate to teacher if needed, or just delete.
+    -- Assuming a simple conversion where we carry over the name.
+    DECLARE @FullName NVARCHAR(100);
+    SELECT @FullName = full_name FROM students WHERE user_id = @TargetUserId;
+    
+    IF @FullName IS NOT NULL
+    BEGIN
+        DELETE FROM students WHERE user_id = @TargetUserId;
+
+        -- 4. Add to Teachers table
+        -- Using default values for specialization and phone as placeholders
+        INSERT INTO teachers (user_id, full_name, specialization, phone)
+        VALUES (@TargetUserId, @FullName, N'Chưa cập nhật', N'');
+        
+        PRINT 'Successfully converted student to teacher.';
+    END
+    ELSE
+    BEGIN
+        -- If not found in students table but is a user, try to get name from somewhere else or use placeholder?
+        -- For now, assume if they were role 3 they should be in students table. 
+        -- If they are not in students table, we just insert into teachers table.
+         INSERT INTO teachers (user_id, full_name, specialization, phone)
+         VALUES (@TargetUserId, N'User Luong1', N'Chưa cập nhật', N'');
+         
+         PRINT 'User role updated and added to teachers table.';
+    END
+
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    PRINT 'Error occurred: ' + ERROR_MESSAGE();
+    ROLLBACK TRANSACTION;
+END CATCH;
+
+
+-- =========================
+-- [NEW] 16. CHANGE REQUESTS (Yêu cầu đổi giờ/bù giờ)
+-- =========================
+CREATE TABLE teacher_requests (
+    request_id INT IDENTITY(1,1) PRIMARY KEY,
+    teacher_id INT NOT NULL,
+    request_type NVARCHAR(50) NOT NULL, -- 'ChangeTimetable', 'MakeupClass', 'Leave'
+    content NVARCHAR(MAX) NOT NULL,
+    status NVARCHAR(50) DEFAULT 'Pending', -- 'Pending', 'Approved', 'Rejected'
+    created_at DATETIME DEFAULT GETDATE(),
+    
+    CONSTRAINT fk_request_teacher FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id) ON DELETE CASCADE
+);
+
+
+-- =========================
+-- INSERT SAMPLE DATA FOR USER 'luong1'
+-- =========================
+BEGIN TRANSACTION;
+
+BEGIN TRY
+    -- 1. Get Teacher ID for 'luong1'
+    DECLARE @LuongTeacherId INT;
+    SELECT @LuongTeacherId = teacher_id FROM teachers t
+    JOIN users u ON t.user_id = u.user_id
+    WHERE u.username = 'luong1';
+
+    IF @LuongTeacherId IS NULL
+    BEGIN
+        PRINT 'Teacher luong1 not found. Please ensure role conversion script ran successfully.';
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+
+    -- Update specialization
+    UPDATE teachers SET specialization = N'Hóa Học', phone = '0912345678' WHERE teacher_id = @LuongTeacherId;
+
+    -- 2. Create a Homeroom Class (12A1) if not exists
+    DECLARE @Class12A1Id INT;
+    IF NOT EXISTS (SELECT 1 FROM classes WHERE class_name = '12A1')
+    BEGIN
+        INSERT INTO classes (class_name, grade, homeroom_teacher_id, academic_year_id)
+        VALUES ('12A1', 12, @LuongTeacherId, 1);
+        SET @Class12A1Id = SCOPE_IDENTITY();
+    END
+    ELSE
+    BEGIN
+        SELECT @Class12A1Id = class_id FROM classes WHERE class_name = '12A1';
+        UPDATE classes SET homeroom_teacher_id = @LuongTeacherId WHERE class_id = @Class12A1Id;
+    END
+
+    -- 3. Add Dummy Students to 12A1 (for Attendance/Grades)
+    -- Create dummy users first
+    INSERT INTO users (username, password_hash, role_id) VALUES 
+    ('student1_12a1', '123', 3), ('student2_12a1', '123', 3), ('student3_12a1', '123', 3);
+    
+    INSERT INTO students (user_id, full_name, enrollment_year, status) VALUES 
+    ((SELECT user_id FROM users WHERE username='student1_12a1'), N'Nguyễn Văn Trò', 2023, N'Đang học'),
+    ((SELECT user_id FROM users WHERE username='student2_12a1'), N'Lê Thị Học', 2023, N'Đang học'),
+    ((SELECT user_id FROM users WHERE username='student3_12a1'), N'Trần Minh Chăm', 2023, N'Đang học');
+
+    -- Assign students to class
+    INSERT INTO student_classes (student_id, class_id)
+    SELECT student_id, @Class12A1Id FROM students WHERE user_id IN (
+        SELECT user_id FROM users WHERE username IN ('student1_12a1', 'student2_12a1', 'student3_12a1')
+    );
+
+    -- 4. Add Subject 'Hóa Học'
+    DECLARE @SubjectChemId INT;
+    IF NOT EXISTS (SELECT 1 FROM subjects WHERE subject_name = N'Hóa Học')
+    BEGIN
+        INSERT INTO subjects (subject_name) VALUES (N'Hóa Học');
+        SET @SubjectChemId = SCOPE_IDENTITY();
+    END
+    ELSE
+    BEGIN
+        SELECT @SubjectChemId = subject_id FROM subjects WHERE subject_name = N'Hóa Học';
+    END
+
+    -- 5. Teaching Assignment (Teach Chemistry to 12A1)
+    INSERT INTO teaching_assignments (teacher_id, class_id, subject_id, semester_id)
+    VALUES (@LuongTeacherId, @Class12A1Id, @SubjectChemId, 1);
+
+    -- 6. Timetable
+    -- Monday Period 1 & 2
+    INSERT INTO timetables (class_id, subject_id, teacher_id, semester_id, day_of_week, period, room_number)
+    VALUES 
+    (@Class12A1Id, @SubjectChemId, @LuongTeacherId, 1, N'Thứ 2', 1, 'Lab 1'),
+    (@Class12A1Id, @SubjectChemId, @LuongTeacherId, 1, N'Thứ 2', 2, 'Lab 1'),
+    (@Class12A1Id, @SubjectChemId, @LuongTeacherId, 1, N'Thứ 4', 3, 'P202');
+
+    -- 7. Certificates
+    INSERT INTO teacher_certificates (teacher_id, certificate_name, issued_by, issue_date, description)
+    VALUES
+    (@LuongTeacherId, N'Chứng chỉ Sư phạm Hóa', N'Đại học Sư phạm', '2020-05-15', N'Xếp loại Giỏi'),
+    (@LuongTeacherId, N'IELTS 7.0', N'IDP', '2022-01-10', N'Valid for 2 years');
+
+    -- 8. Requests
+    INSERT INTO teacher_requests (teacher_id, request_type, content, status)
+    VALUES 
+    (@LuongTeacherId, N'Nghỉ phép', N'Xin nghỉ ốm ngày thứ 6', N'Pending');
+
+    PRINT 'Sample data for teacher luong1 inserted successfully.';
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    PRINT 'Error: ' + ERROR_MESSAGE();
+    ROLLBACK TRANSACTION;
+END CATCH;
+

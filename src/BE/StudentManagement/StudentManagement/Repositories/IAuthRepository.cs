@@ -6,6 +6,7 @@ namespace StudentManagement.Repositories
     {
         Task<User?> GetUserByUsernameAsync(string username);
         Task<User?> GetUserByEmailAsync(string email);
+        Task<User?> GetUserByIdAsync(int userId);
         Task<bool> UserExistsAsync(string username);
         Task<bool> EmailExistsAsync(string email);
         Task<User> CreateUserAsync(User user);
