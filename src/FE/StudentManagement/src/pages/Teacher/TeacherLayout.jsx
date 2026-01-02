@@ -12,15 +12,27 @@ import {
   LogOut,
   Menu,
   X,
-  Bell
+  Bell,
+  Book,
+  MessageCircle
 } from 'lucide-react';
 import './Teacher.css';
 
 const TeacherLayout = () => {
+  console.log("TeacherLayout rendering...");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  
+  let user = {};
+  try {
+     const storedUser = localStorage.getItem('user');
+     if (storedUser && storedUser !== "undefined") {
+        user = JSON.parse(storedUser);
+     }
+  } catch (err) {
+      console.error("Failed to parse user from localStorage", err);
+  }
 
   const menuItems = [
     { path: '/teacher/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -30,6 +42,8 @@ const TeacherLayout = () => {
     { path: '/teacher/attendance', icon: ClipboardCheck, label: 'Attendance' },
     { path: '/teacher/grades', icon: GraduationCap, label: 'Grade Entry' },
     { path: '/teacher/conduct', icon: UserCircle, label: 'Conduct' },
+    { path: '/teacher/materials', icon: Book, label: 'Materials' },
+    { path: '/teacher/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/teacher/profile', icon: UserCircle, label: 'Profile' },
     { path: '/teacher/certificates', icon: Award, label: 'Certificates' },
   ];

@@ -79,26 +79,31 @@
 
 .input-wrapper {
   position: relative;
-  display: flex;
-  align-items: center;
+  /* display: flex;  <-- Remove flex if we are using absolute positioning for icon to avoid conflicts, though absolute pulls it out of flow anyway. */
+  display: block; 
 }
 
 .input-wrapper svg {
   position: absolute;
-  left: 1rem;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--text-muted);
   pointer-events: none;
+  z-index: 10;
 }
 
 .form-input {
   width: 100%;
-  padding: 0.8rem 1rem 0.8rem 3rem;
+  padding: 12px 16px 12px 50px !important; /* Force padding to prevent overlap */
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   color: #fff;
   font-size: 1rem;
   transition: var(--transition);
+  display: block; /* Ensure it behaves as a block element */
+  box-sizing: border-box; /* Ensure padding doesn't affect width */
 }
 
 .form-input:focus {

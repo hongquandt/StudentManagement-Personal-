@@ -41,6 +41,14 @@ namespace StudentManagement.Controllers
             });
         }
 
+        [HttpPut("student/{studentId}")]
+        public async Task<IActionResult> UpdateStudent(int studentId, [FromBody] StudentUpdateDto dto)
+        {
+            var result = await _teacherService.UpdateStudentAsync(studentId, dto);
+            if (result) return Ok("Updated student.");
+            return BadRequest("Failed to update.");
+        }
+
         [HttpGet("classes/{teacherId}")]
         public async Task<IActionResult> GetTeachingClasses(int teacherId)
         {
@@ -78,6 +86,22 @@ namespace StudentManagement.Controllers
         {
             var requests = await _teacherService.GetRequestsAsync(teacherId);
             return Ok(requests);
+        }
+
+        [HttpPut("requests/{requestId}")]
+        public async Task<IActionResult> UpdateRequest(int requestId, [FromBody] TeacherRequestDto request)
+        {
+            var result = await _teacherService.UpdateRequestAsync(requestId, request);
+            if (result) return Ok("Request updated.");
+            return BadRequest("Failed to update request.");
+        }
+
+        [HttpDelete("requests/{requestId}")]
+        public async Task<IActionResult> DeleteRequest(int requestId)
+        {
+            var result = await _teacherService.DeleteRequestAsync(requestId);
+            if (result) return Ok("Request deleted.");
+            return BadRequest("Failed to delete request.");
         }
 
         // 4. Attendance
@@ -157,11 +181,117 @@ namespace StudentManagement.Controllers
             return Ok(result ? "Certificate added." : "Failed.");
         }
 
+        [HttpPut("certificates/{certId}")]
+        public async Task<IActionResult> UpdateCertificate(int certId, [FromBody] CertificateDto dto)
+        {
+            var result = await _teacherService.UpdateCertificateAsync(certId, dto);
+            return Ok(result ? "Certificate updated." : "Failed.");
+        }
+
         [HttpDelete("certificates/{teacherId}/{certId}")]
         public async Task<IActionResult> DeleteCertificate(int teacherId, int certId)
         {
             var result = await _teacherService.DeleteCertificateAsync(certId, teacherId);
             return Ok(result ? "Certificate deleted." : "Failed.");
         }
+
+        // 9. Class Materials
+        [HttpGet("materials/{classId}")]
+        public async Task<IActionResult> GetClassMaterials(int classId)
+        {
+            var materials = await _teacherService.GetClassMaterialsAsync(classId);
+            return Ok(materials);
+        }
+
+        [HttpPost("materials")]
+        public async Task<IActionResult> AddClassMaterial([FromForm] ClassMaterialUploadModel model)
+        {
+            if (model.ClassId <= 0 || string.IsNullOrEmpty(model.Title)) return BadRequest("Invalid data.");
+
+            string filePath = model.Url; // Keep URL if provided
+
+            if (model.File != null)
+            {
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "materials");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                var uniqueFileName = $"{Guid.NewGuid()}_{model.File.FileName}";
+                var fileSystemPath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(fileSystemPath, FileMode.Create))
+                {
+                    await model.File.CopyToAsync(stream);
+                }
+                
+                // Return relative path or full URL. Usually relative path for static files.
+                // Assuming standard static file serving:
+                filePath = $"/uploads/materials/{uniqueFileName}";
+            }
+
+            var dto = new ClassMaterialDto
+            {
+                ClassId = model.ClassId,
+                Title = model.Title,
+                Description = model.Description,
+                FilePath = filePath
+            };
+
+            var result = await _teacherService.AddClassMaterialAsync(dto);
+            return Ok(result ? "Material added." : "Failed to add.");
+        }
+
+        [HttpPut("materials/{materialId}")]
+        public async Task<IActionResult> UpdateClassMaterial(int materialId, [FromForm] ClassMaterialUploadModel model)
+        {
+            // First, simple check
+            if (materialId <= 0) return BadRequest("Invalid ID");
+
+            string filePath = model.Url; // Keep exisiting or new URL
+
+            if (model.File != null)
+            {
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "materials");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                var uniqueFileName = $"{Guid.NewGuid()}_{model.File.FileName}";
+                var fileSystemPath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(fileSystemPath, FileMode.Create))
+                {
+                    await model.File.CopyToAsync(stream);
+                }
+                
+                filePath = $"/uploads/materials/{uniqueFileName}";
+            }
+
+            var dto = new ClassMaterialDto
+            {
+                // ClassId is technically not needed for Update usually, but Service might ignore or use it. 
+                // Let's pass what we have.
+                ClassId = model.ClassId, 
+                Title = model.Title,
+                Description = model.Description,
+                FilePath = filePath
+            };
+
+            var result = await _teacherService.UpdateClassMaterialAsync(materialId, dto);
+            return Ok(result ? "Material updated." : "Failed to update.");
+        }
+
+        [HttpDelete("materials/{materialId}")]
+        public async Task<IActionResult> DeleteClassMaterial(int materialId)
+        {
+            var result = await _teacherService.DeleteClassMaterialAsync(materialId);
+            return Ok(result ? "Material deleted." : "Failed to delete.");
+        }
+    }
+
+    public class ClassMaterialUploadModel
+    {
+        public int ClassId { get; set; }
+        public string Title { get; set; }
+        public string? Description { get; set; }
+        public string? Url { get; set; } // For legacy or direct link
+        public IFormFile? File { get; set; }
     }
 }

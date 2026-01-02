@@ -31,6 +31,7 @@ namespace StudentManagement.Services
             return await _context.StudentClasses
                .Where(sc => sc.ClassId == classId)
                .Include(sc => sc.Student)
+                  .ThenInclude(s => s.User)
                .Select(sc => sc.Student)
                .ToListAsync();
         }
@@ -64,6 +65,22 @@ namespace StudentManagement.Services
             // I'll return true for now, assuming future implementation or name update.
             // Let's allow updating ClassName just to demonstrate.
             await Task.Yield(); // Simulate async work
+            return true;
+        }
+
+        public async Task<bool> UpdateStudentAsync(int studentId, StudentUpdateDto dto)
+        {
+            var student = await _context.Students.FindAsync(studentId);
+            if (student == null) return false;
+
+            student.FullName = dto.FullName;
+            student.Gender = dto.Gender;
+            if (dto.DateOfBirth.HasValue) 
+                student.DateOfBirth = DateOnly.FromDateTime(dto.DateOfBirth.Value);
+            student.Address = dto.Address;
+            student.Status = dto.Status;
+
+            await _context.SaveChangesAsync();
             return true;
         }
 
@@ -110,6 +127,28 @@ namespace StudentManagement.Services
                 .Where(r => r.TeacherId == teacherId)
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
+        }
+
+        public async Task<bool> UpdateRequestAsync(int requestId, TeacherRequestDto dto)
+        {
+            var request = await _context.TeacherRequests.FindAsync(requestId);
+            if (request == null) return false;
+
+            request.RequestType = dto.RequestType;
+            request.Content = dto.Content;
+            
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteRequestAsync(int requestId)
+        {
+            var request = await _context.TeacherRequests.FindAsync(requestId);
+            if (request == null) return false;
+
+            _context.TeacherRequests.Remove(request);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         // 4. Attendance
@@ -354,6 +393,24 @@ namespace StudentManagement.Services
             return true;
         }
 
+        public async Task<bool> UpdateCertificateAsync(int certificateId, CertificateDto dto)
+        {
+            var cert = await _context.TeacherCertificates.FindAsync(certificateId);
+            if (cert == null) return false;
+
+            cert.CertificateName = dto.CertificateName;
+            cert.IssuedBy = dto.IssuedBy;
+            cert.IssueDate = dto.IssueDate.HasValue ? DateOnly.FromDateTime(dto.IssueDate.Value) : null;
+            cert.Description = dto.Description;
+            if (!string.IsNullOrEmpty(dto.CertificateImage))
+            {
+                cert.CertificateImage = dto.CertificateImage;
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<bool> DeleteCertificateAsync(int certificateId, int teacherId)
         {
             var cert = await _context.TeacherCertificates.FindAsync(certificateId);
@@ -422,6 +479,60 @@ namespace StudentManagement.Services
                 HoursTaught = hoursTaught,
                 AvgAttendance = avgAttendance
             };
+        }
+
+        // 9. Class Materials
+        public async Task<List<ClassMaterial>> GetClassMaterialsAsync(int classId)
+        {
+            return await _context.ClassMaterials
+                .Where(m => m.ClassId == classId)
+                .OrderByDescending(m => m.UploadDate)
+                .ToListAsync();
+        }
+
+        public async Task<bool> AddClassMaterialAsync(ClassMaterialDto dto)
+        {
+            if (string.IsNullOrEmpty(dto.Title) || dto.ClassId <= 0) return false;
+
+            var material = new ClassMaterial
+            {
+                ClassId = dto.ClassId,
+                Title = dto.Title,
+                Description = dto.Description,
+                FilePath = dto.FilePath,
+                UploadDate = DateTime.Now
+            };
+
+            _context.ClassMaterials.Add(material);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> UpdateClassMaterialAsync(int materialId, ClassMaterialDto dto)
+        {
+            var material = await _context.ClassMaterials.FindAsync(materialId);
+            if (material == null) return false;
+
+            material.Title = dto.Title;
+            material.Description = dto.Description;
+            // Only update filepath if provided (optional logic, but usually good)
+            if (!string.IsNullOrEmpty(dto.FilePath))
+            {
+                material.FilePath = dto.FilePath;
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteClassMaterialAsync(int materialId)
+        {
+            var material = await _context.ClassMaterials.FindAsync(materialId);
+            if (material == null) return false;
+
+            _context.ClassMaterials.Remove(material);
+            await _context.SaveChangesAsync();
+            return true;    
         }
     }
 }

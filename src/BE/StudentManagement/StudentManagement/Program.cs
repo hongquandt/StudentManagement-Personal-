@@ -9,7 +9,8 @@ namespace StudentManagement
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers().AddJsonOptions(x =>
+                x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -29,14 +30,17 @@ namespace StudentManagement
             builder.Services.AddScoped<StudentManagement.Services.IGeminiService, StudentManagement.Services.GeminiService>();
             builder.Services.AddScoped<StudentManagement.Services.ITeacherService, StudentManagement.Services.TeacherService>();
 
+            builder.Services.AddSignalR(); // Add SignalR
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAll",
                     builder =>
                     {
-                        builder.AllowAnyOrigin()
+                        builder.WithOrigins("http://localhost:5173") // Specific origin needed for credentials
                                .AllowAnyMethod()
-                               .AllowAnyHeader();
+                               .AllowAnyHeader()
+                               .AllowCredentials(); // Allow Credentials
                     });
             });
 
@@ -50,6 +54,7 @@ namespace StudentManagement
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles(); // Enable static files for materials
 
             app.UseCors("AllowAll");
 
@@ -57,6 +62,7 @@ namespace StudentManagement
 
 
             app.MapControllers();
+            app.MapHub<StudentManagement.Hubs.ChatHub>("/chatHub"); // Map Hub
 
             app.Run();
         }

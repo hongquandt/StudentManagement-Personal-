@@ -32,4 +32,7 @@ public partial class User
     public virtual Student? Student { get; set; }
 
     public virtual Teacher? Teacher { get; set; }
+
+    public virtual ICollection<Message> SentMessages { get; set; } = new List<Message>();
+    public virtual ICollection<Message> ReceivedMessages { get; set; } = new List<Message>();
 }

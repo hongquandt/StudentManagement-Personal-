@@ -86,5 +86,33 @@ namespace StudentManagement.Controllers
                 t.RoomNumber
             }));
         }
+
+        [HttpGet("conduct/{studentId}")]
+        public async Task<IActionResult> GetConduct(int studentId)
+        {
+            var conduct = await _studentService.GetConductAsync(studentId);
+            return Ok(conduct.Select(c => new
+            {
+                c.ConductId,
+                c.ConductLevel,
+                c.Comment,
+                SemesterName = c.Semester.SemesterName
+            }));
+        }
+
+        [HttpGet("materials/{studentId}")]
+        public async Task<IActionResult> GetMaterials(int studentId)
+        {
+            var materials = await _studentService.GetMaterialsAsync(studentId);
+            return Ok(materials.Select(m => new
+            {
+                m.MaterialId,
+                m.Title,
+                m.Description,
+                m.FilePath,
+                m.UploadDate,
+                ClassName = m.Class.ClassName
+            }));
+        }
     }
 }

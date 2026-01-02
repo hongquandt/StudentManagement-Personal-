@@ -65,6 +65,33 @@ namespace StudentManagement.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Conduct>> GetConductByStudentIdAsync(int studentId)
+        {
+            return await _context.Conducts
+                .Include(c => c.Semester)
+                .Where(c => c.StudentId == studentId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ClassMaterial>> GetClassMaterialsByStudentIdAsync(int studentId)
+        {
+            var studentClassIds = await _context.StudentClasses
+                .Where(sc => sc.StudentId == studentId)
+                .Select(sc => sc.ClassId)
+                .ToListAsync();
+
+            if (!studentClassIds.Any())
+            {
+                return new List<ClassMaterial>();
+            }
+
+            return await _context.ClassMaterials
+                .Where(m => studentClassIds.Contains(m.ClassId))
+                .Include(m => m.Class) // Include Class info if needed for display
+                .OrderByDescending(m => m.UploadDate)
+                .ToListAsync();
+        }
+
         public async Task UpdateStudentAsync(Student student)
         {
             _context.Students.Update(student);
