@@ -34,6 +34,16 @@ namespace StudentManagement.Services
             return await _studentRepository.GetTimetableByStudentIdAsync(studentId);
         }
 
+        public async Task<IEnumerable<Conduct>> GetConductAsync(int studentId)
+        {
+            return await _studentRepository.GetConductByStudentIdAsync(studentId);
+        }
+
+        public async Task<IEnumerable<ClassMaterial>> GetMaterialsAsync(int studentId)
+        {
+            return await _studentRepository.GetClassMaterialsByStudentIdAsync(studentId);
+        }
+
         public async Task<bool> UpdateProfileAsync(int userId, StudentUpdateModel model)
         {
             var student = await _studentRepository.GetStudentByUserIdAsync(userId);

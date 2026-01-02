@@ -9,6 +9,7 @@ namespace StudentManagement.Services
         Task<List<Student>> GetHomeroomStudentsAsync(int classId);
         Task<List<ClassDto>> GetTeachingClassesAsync(int teacherId); // Updated to DTO
         Task<bool> UpdateHomeroomClassAsync(int classId, string? announcement); // Simplified update
+        Task<bool> UpdateStudentAsync(int studentId, StudentUpdateDto studentDto); // New feature
 
         // 2. Timetable
         Task<List<TimetableDto>> GetTimetableAsync(int teacherId);
@@ -16,6 +17,8 @@ namespace StudentManagement.Services
         // 3. Requests
         Task<bool> CreateRequestAsync(int teacherId, TeacherRequestDto request);
         Task<List<TeacherRequest>> GetRequestsAsync(int teacherId);
+        Task<bool> UpdateRequestAsync(int requestId, TeacherRequestDto request);
+        Task<bool> DeleteRequestAsync(int requestId);
 
         // 4. Attendance
         Task<List<AttendanceDto>> GetAttendanceAsync(int classId, DateTime date);
@@ -36,6 +39,7 @@ namespace StudentManagement.Services
         // 8. Certificates
         Task<List<TeacherCertificate>> GetCertificatesAsync(int teacherId);
         Task<bool> AddCertificateAsync(int teacherId, CertificateDto certificate);
+        Task<bool> UpdateCertificateAsync(int certificateId, CertificateDto certificate);
         Task<bool> DeleteCertificateAsync(int certificateId, int teacherId);
         
         // Stats
@@ -43,6 +47,11 @@ namespace StudentManagement.Services
 
         // Helper
         Task<int?> GetTeacherIdByUserIdAsync(int userId);
+        // 9. Class Materials
+        Task<List<ClassMaterial>> GetClassMaterialsAsync(int classId);
+        Task<bool> AddClassMaterialAsync(ClassMaterialDto material);
+        Task<bool> UpdateClassMaterialAsync(int materialId, ClassMaterialDto material);
+        Task<bool> DeleteClassMaterialAsync(int materialId);
     }
 
     public class DashboardStatsDto
@@ -53,6 +62,14 @@ namespace StudentManagement.Services
     }
 
     // DTOs
+    public class ClassMaterialDto
+    {
+        public int ClassId { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string FilePath { get; set; }
+    }
+
     public class TimetableDto
     {
         public string DayOfWeek { get; set; }
@@ -122,4 +139,15 @@ namespace StudentManagement.Services
         public int ClassId { get; set; }
         public string ClassName { get; set; }
     }
+
+    public class StudentUpdateDto
+    {
+        public string FullName { get; set; }
+        public string? Gender { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string? Address { get; set; }
+        public string? Status { get; set; }
+    }
+
+
 }

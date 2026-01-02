@@ -8,6 +8,8 @@ namespace StudentManagement.Services
         Task<IEnumerable<Attendance>> GetAttendanceAsync(int studentId);
         Task<IEnumerable<Score>> GetScoresAsync(int studentId);
         Task<IEnumerable<Timetable>> GetTimetableAsync(int studentId);
+        Task<IEnumerable<Conduct>> GetConductAsync(int studentId);
+        Task<IEnumerable<ClassMaterial>> GetMaterialsAsync(int studentId);
         Task<bool> UpdateProfileAsync(int userId, StudentUpdateModel model);
     }
 
