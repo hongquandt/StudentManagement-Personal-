@@ -13,6 +13,7 @@ import TeacherGradeEntry from './pages/Teacher/TeacherGradeEntry'
 import TeacherConduct from './pages/Teacher/TeacherConduct'
 import TeacherProfile from './pages/Teacher/TeacherProfile'
 import TeacherCertificates from './pages/Teacher/TeacherCertificates'
+import TeacherMaterials from './pages/Teacher/TeacherMaterials'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import Home from './pages/Home'
@@ -20,6 +21,9 @@ import StudentUpdateProfile from './pages/Student/StudentUpdateProfile'
 import StudentAttendance from './pages/Student/StudentAttendance'
 import StudentScore from './pages/Student/StudentScore'
 import StudentTimetable from './pages/Student/StudentTimetable'
+import StudentConduct from './pages/Student/StudentConduct'
+import StudentMaterials from './pages/Student/StudentMaterials'
+import Chat from './pages/Chat'
 import ChangePassword from './pages/ChangePassword'
 import './App.css'
 
@@ -36,6 +40,12 @@ function App() {
         <Route path="/student/attendance" element={<StudentAttendance />} />
         <Route path="/student/score" element={<StudentScore />} />
         <Route path="/student/timetable" element={<StudentTimetable />} />
+        <Route path="/student/conduct" element={<StudentConduct />} />
+        <Route path="/student/materials" element={<StudentMaterials />} />
+        
+        {/* Chat - Accessible by both */}
+        <Route path="/chat" element={<Chat />} />
+
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
@@ -50,6 +60,8 @@ function App() {
           <Route path="conduct" element={<TeacherConduct />} />
           <Route path="profile" element={<TeacherProfile />} />
           <Route path="certificates" element={<TeacherCertificates />} />
+          <Route path="materials" element={<TeacherMaterials />} />
+          <Route path="chat" element={<Chat />} /> {/* Nested chat route for teacher layout styling */}
         </Route>
       </Routes>
     </Router>
