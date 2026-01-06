@@ -154,6 +154,8 @@ const Login = () => {
         const role = data.role ? data.role.toLowerCase() : '';
         if (role === 'teacher') {
           navigate('/teacher/dashboard');
+        } else if (role === 'admin') {
+          navigate('/admin/dashboard');
         } else {
           navigate('/');
         } 
