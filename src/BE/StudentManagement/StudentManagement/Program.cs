@@ -10,7 +10,11 @@ namespace StudentManagement
             // Add services to the container.
 
             builder.Services.AddControllers().AddJsonOptions(x =>
-                x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
+            {
+                x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                x.JsonSerializerOptions.Converters.Add(new StudentManagement.Converters.DateOnlyJsonConverter());
+                x.JsonSerializerOptions.Converters.Add(new StudentManagement.Converters.NullableDateOnlyJsonConverter());
+            });
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -29,6 +33,7 @@ namespace StudentManagement
             builder.Services.AddScoped<StudentManagement.Services.IStudentService, StudentManagement.Services.StudentService>();
             builder.Services.AddScoped<StudentManagement.Services.IGeminiService, StudentManagement.Services.GeminiService>();
             builder.Services.AddScoped<StudentManagement.Services.ITeacherService, StudentManagement.Services.TeacherService>();
+            builder.Services.AddScoped<StudentManagement.Services.IAdminService, StudentManagement.Services.AdminService>();
 
             builder.Services.AddSignalR(); // Add SignalR
 

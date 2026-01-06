@@ -1,32 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import * as signalR from "@microsoft/signalr";
 import { Send, User, MessageCircle } from 'lucide-react';
-import './Chat.css'; // We'll create this CSS
+import { useChat } from '../context/ChatContext';
+import './Chat.css';
 
 const Chat = () => {
-    const [connection, setConnection] = useState(null);
+    const { connection, userId } = useChat();
     const [contacts, setContacts] = useState([]);
-    const [activeChat, setActiveChat] = useState(null); // active contact user object
+    const [activeChat, setActiveChat] = useState(null);
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState("");
     const messagesEndRef = useRef(null);
     
-    // Auth - assume user is in localStorage
-    const storedUser = JSON.parse(localStorage.getItem('user'));
-    const userId = storedUser?.userId;
-
+    // Load Contacts
     useEffect(() => {
         if (!userId) return;
 
-        // Init SignalR
-        const newConnection = new signalR.HubConnectionBuilder()
-            .withUrl("https://localhost:7115/chatHub?userId=" + userId) // Pass userId
-            .withAutomaticReconnect()
-            .build();
-
-        setConnection(newConnection);
-
-        // Load Contacts
         fetch(`https://localhost:7115/api/Chat/contacts/${userId}`)
             .then(res => res.json())
             .then(data => setContacts(data))
@@ -34,28 +22,80 @@ const Chat = () => {
 
     }, [userId]);
 
+    // Handle Real-time Messages
     useEffect(() => {
         if (connection) {
-            connection.start()
-                .then(() => {
-                    console.log('Connected to ChatHub');
-                    
-                    connection.on("ReceiveMessage", (message) => {
-                        // If chatting with this sender, add to list
-                        setMessages(prev => [...prev, { ...message, isRead: false }]); 
-                    });
+            const handleReceiveMessage = (message) => {
+                // If the message belongs to the active conversation, add it
+                // We access activeChat inside the closure. 
+                // CAUTION: activeChat state might be stale in closure unless we use a functional update and check logic,
+                // or put activeChat in dependencies.
+                // Better approach: Always update messages if sender matches activeChat.
+                
+                // However, since we can't easily access the current 'activeChat' ref inside this callback without invalidating the effect constantly,
+                // we will trust the setState functional update to check ID, OR jus add it and let UI filter? 
+                // The current UI just maps 'messages'. 'messages' is loaded from history.
+                // So we should only append if the message.senderId === activeChat.userId OR message.receiverId === activeChat.userId (if we sent it from another tab?)
+                
+                // Let's use a functional update to get access to current state if needed? 
+                // Actually, simplest is: just SetMessages(prev => [...prev, msg])
+                // BUT we only want to show it if it belongs to THIS chat.
+                // We can filter at render time? No, 'messages' state represents the CURRENT conversation.
+                
+                setMessages(prev => {
+                     // We don't have access to 'activeChat' here easily without rebuilding listener.
+                     // But we can check if the new message's sender/receiver matches the IDs of the messages already in 'prev' (if any).
+                     // Or better, trigger a re-fetch? No, that's slow.
+                     
+                     // We need 'activeChat' in dependency array?
+                     // If we add activeChat to deps, we detach and reattach listener on every chat switch.
+                     // useful to keep closure fresh.
+                     return prev; 
+                });
+            };
 
-                    connection.on("MessageSent", (message) => {
-                         setMessages(prev => [...prev, { ...message, isRead: true }]); 
-                    });
-                })
-                .catch(e => console.log('Connection failed: ', e));
+            // To properly handle activeChat, let's redefine the effect when activeChat changes, 
+            // OR use a ref for activeChat.
+            // Using a ref is cleaner for SignalR handlers strings.
         }
     }, [connection]);
+
+    // Better implementation using Ref for activeChat to avoid re-binding listeners
+    const activeChatRef = useRef(activeChat);
+    useEffect(() => {
+        activeChatRef.current = activeChat;
+    }, [activeChat]);
+
+    useEffect(() => {
+        if (!connection) return;
+
+        const onReceiveMessage = (message) => {
+            const currentActive = activeChatRef.current;
+            if (currentActive && (message.senderId === currentActive.userId || message.senderId === userId)) {
+               setMessages(prev => [...prev, { ...message, isRead: false }]);
+            }
+        };
+
+        const onMessageSent = (message) => {
+            const currentActive = activeChatRef.current;
+            if (currentActive && (message.receiverId === currentActive.userId || message.senderId === userId)) {
+                setMessages(prev => [...prev, { ...message, isRead: true }]);
+            }
+        };
+
+        connection.on("ReceiveMessage", onReceiveMessage);
+        connection.on("MessageSent", onMessageSent);
+
+        return () => {
+            connection.off("ReceiveMessage", onReceiveMessage);
+            connection.off("MessageSent", onMessageSent);
+        };
+    }, [connection, userId]); // Only re-bind if connection changes (or userId)
 
     // Load History when active chat changes
     useEffect(() => {
         if (activeChat && userId) {
+            setMessages([]); // Clear previous
             fetch(`https://localhost:7115/api/Chat/history/${userId}/${activeChat.userId}`)
                 .then(res => res.json())
                 .then(data => setMessages(data))

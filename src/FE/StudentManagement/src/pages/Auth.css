@@ -111,6 +111,17 @@
   border-color: var(--primary-color);
   background: rgba(15, 23, 42, 0.8);
   box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  color: #fff; /* Ensure focus text is white */
+}
+
+/* Fix for Chrome Autofill */
+.form-input:-webkit-autofill,
+.form-input:-webkit-autofill:hover, 
+.form-input:-webkit-autofill:focus, 
+.form-input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px #1e293b inset !important; /* Match dark background */
+    -webkit-text-fill-color: white !important;
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 .auth-btn {
