@@ -23,5 +23,7 @@ public partial class Teacher
 
     public virtual ICollection<Timetable> Timetables { get; set; } = new List<Timetable>();
 
+    public virtual ICollection<TeacherRequest> TeacherRequests { get; set; } = new List<TeacherRequest>();
+
     public virtual User User { get; set; } = null!;
 }

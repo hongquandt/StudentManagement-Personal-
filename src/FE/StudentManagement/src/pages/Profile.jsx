@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, Mail, Shield, Camera, Edit2, LogOut, ArrowLeft } from 'lucide-react';
+import { User, Mail, Shield, Camera, Edit2, LogOut, ArrowLeft, Calendar, Award, Clock, Lock, Book, MessageCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { uploadImage } from '../services/cloudinaryService';
 import './Profile.css';
@@ -129,21 +129,37 @@ const Profile = () => {
                                 </div>
                             </div>
                         </div>
-                        <button className="btn btn-outline edit-profile-btn">
-                            <Edit2 size={16} /> Edit Profile
-                        </button>
+                        <div style={{display:'flex', gap:'10px'}}>
+                            <button className="btn btn-outline edit-profile-btn" onClick={() => navigate('/student/update-profile')}>
+                                <Edit2 size={16} /> Edit Profile
+                            </button>
+                            <button className="btn btn-outline edit-profile-btn" onClick={() => navigate('/change-password')}>
+                                <Lock size={16} /> Change Password
+                            </button>
+                        </div>
                     </div>
 
                     <div className="profile-card stats-card">
-                        <h3>Account Status</h3>
-                        {/* Placeholder stats */}
-                         <div className="stat-row">
-                            <span>Status</span>
-                            <span className="status-active">Active</span>
-                         </div>
-                         <div className="stat-row">
-                            <span>Member Since</span>
-                            <span>{new Date().getFullYear()}</span>
+                         <h3>Student Services</h3>
+                         <div className="services-grid" style={{display: 'grid', gridTemplateColumns: '1fr', gap: '10px'}}>
+                            <button className="btn btn-outline" onClick={() => navigate('/student/attendance')} style={{justifyContent: 'flex-start', marginTop: '0.5rem', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)'}}>
+                                <span style={{marginRight: 'auto', display:'flex', alignItems:'center', gap: '10px'}}><Calendar size={16} /> Check Attendance</span>
+                            </button>
+                            <button className="btn btn-outline" onClick={() => navigate('/student/score')} style={{justifyContent: 'flex-start', marginTop: '0.5rem', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)'}}>
+                                <span style={{marginRight: 'auto', display:'flex', alignItems:'center', gap: '10px'}}><Award size={16} /> View Score</span>
+                            </button>
+                            <button className="btn btn-outline" onClick={() => navigate('/student/timetable')} style={{justifyContent: 'flex-start', marginTop: '0.5rem', background: 'rgba(167, 139, 250, 0.1)', border: '1px solid rgba(167, 139, 250, 0.2)'}}>
+                                <span style={{marginRight: 'auto', display:'flex', alignItems:'center', gap: '10px'}}><Clock size={16} /> View Timetable</span>
+                            </button>
+                            <button className="btn btn-outline" onClick={() => navigate('/student/conduct')} style={{justifyContent: 'flex-start', marginTop: '0.5rem', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)'}}>
+                                <span style={{marginRight: 'auto', display:'flex', alignItems:'center', gap: '10px'}}><Shield size={16} /> View Conduct</span>
+                            </button>
+                            <button className="btn btn-outline" onClick={() => navigate('/student/materials')} style={{justifyContent: 'flex-start', marginTop: '0.5rem', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)'}}>
+                                <span style={{marginRight: 'auto', display:'flex', alignItems:'center', gap: '10px'}}><Book size={16} /> View Materials</span>
+                            </button>
+                            <button className="btn btn-outline" onClick={() => navigate('/chat')} style={{justifyContent: 'flex-start', marginTop: '0.5rem', background: 'rgba(236, 72, 153, 0.1)', border: '1px solid rgba(236, 72, 153, 0.2)'}}>
+                                <span style={{marginRight: 'auto', display:'flex', alignItems:'center', gap: '10px'}}><MessageCircle size={16} /> Open Chat</span>
+                            </button>
                          </div>
                          
                          <div className="divider"></div>

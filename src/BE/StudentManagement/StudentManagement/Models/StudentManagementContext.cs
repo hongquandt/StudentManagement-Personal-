@@ -49,6 +49,12 @@ public partial class StudentManagementContext : DbContext
 
     public virtual DbSet<Timetable> Timetables { get; set; }
 
+    public virtual DbSet<TeacherRequest> TeacherRequests { get; set; }
+
+    public virtual DbSet<ClassMaterial> ClassMaterials { get; set; }
+
+    public virtual DbSet<Message> Messages { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -505,6 +511,81 @@ public partial class StudentManagementContext : DbContext
                 .HasForeignKey(d => d.TeacherId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_tt_teacher");
+        });
+
+        modelBuilder.Entity<TeacherRequest>(entity =>
+        {
+            entity.HasKey(e => e.RequestId).HasName("PK__teacher___E3C5DE31D1234567");
+
+            entity.ToTable("teacher_requests");
+
+            entity.Property(e => e.RequestId).HasColumnName("request_id");
+            entity.Property(e => e.Content).HasColumnName("content");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.RequestType)
+                .HasMaxLength(50)
+                .HasColumnName("request_type");
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .HasDefaultValue("Pending")
+                .HasColumnName("status");
+            entity.Property(e => e.TeacherId).HasColumnName("teacher_id");
+
+            entity.HasOne(d => d.Teacher).WithMany(p => p.TeacherRequests)
+                .HasForeignKey(d => d.TeacherId)
+                .HasConstraintName("fk_request_teacher");
+        });
+
+        modelBuilder.Entity<ClassMaterial>(entity =>
+        {
+            entity.HasKey(e => e.MaterialId).HasName("PK__class_ma__0D003C587D8E2DF9");
+
+            entity.ToTable("class_materials");
+
+            entity.Property(e => e.MaterialId).HasColumnName("material_id");
+            entity.Property(e => e.ClassId).HasColumnName("class_id");
+            entity.Property(e => e.Title).HasMaxLength(200).HasColumnName("title");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.FilePath).HasColumnName("file_path");
+            entity.Property(e => e.UploadDate)
+                  .HasDefaultValueSql("(getdate())")
+                  .HasColumnType("datetime")
+                  .HasColumnName("upload_date");
+
+            entity.HasOne(d => d.Class).WithMany(p => p.ClassMaterials)
+                .HasForeignKey(d => d.ClassId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_material_class");
+        });
+
+        modelBuilder.Entity<Message>(entity =>
+        {
+            entity.HasKey(e => e.MessageId).HasName("PK__messages__432");
+
+            entity.ToTable("messages");
+
+            entity.Property(e => e.MessageId).HasColumnName("message_id");
+            entity.Property(e => e.SenderId).HasColumnName("sender_id");
+            entity.Property(e => e.ReceiverId).HasColumnName("receiver_id");
+            entity.Property(e => e.Content).HasColumnName("content");
+            entity.Property(e => e.SentAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("sent_at");
+            entity.Property(e => e.IsRead).HasColumnName("is_read");
+
+            entity.HasOne(d => d.Sender).WithMany(p => p.SentMessages)
+                .HasForeignKey(d => d.SenderId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_msg_sender");
+
+            entity.HasOne(d => d.Receiver).WithMany(p => p.ReceivedMessages)
+                .HasForeignKey(d => d.ReceiverId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_msg_receiver");
         });
 
         modelBuilder.Entity<User>(entity =>
